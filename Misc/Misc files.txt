@@ -1,0 +1,7 @@
+MISC FILES INFORMATION
+
+The JSON files are not required for the app to work, they are simply
+reference files that can be referenced for future expansion work.
+
+The "Gemini prompt.txt" is a starting point used to create the code via 
+AI tools and should be compatible with any modern AI tool.

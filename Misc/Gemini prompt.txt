@@ -3,13 +3,13 @@ write a documented UI based application that will search an instance of PingDire
 
 debug information: direct a coupy of search input and returned distinguished names from PingDirectory and posted usernames to standard output
 
-the web application and pingdirectory will be hosted on a server called win11. The directory uses port 389. users will be found in ou=trilogie,dc=matt,dc=lab. the bind account is cn=dmanager with a password of Ping-2025!
+the web application and pingdirectory will be hosted on a server called win11. The directory uses port 389. users will be found in ou=trilogie,dc=matt,dc=lab. the bind account is cn=dmanager with a password of ********
 
 The PingOne instance is in the north american/.com region
-environment id: a7f3b70d-7674-444a-86a0-17fadfbeb83
-clientid:d7749e7a-e378-4230-873a-09a79eb16f22
-client Secret: njTk5w5IPF.aVvZ5BwH_wkjpOz~EI3wmM~RBpn.nXMPYk0HmbbFD7jruQummvvWq
-users should be created in the population id:  212c3db5-724d-47a6-8740-f167576ae920
+environment id: ********
+clientid:********
+client Secret: ********
+users should be created in the population id:  ********
 
 Note and address any omissions in this spec. As this is a demonstration it is ok to use clear text include documentation on linking python code to any required html
 
