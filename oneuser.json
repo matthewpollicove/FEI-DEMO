@@ -1,0 +1,16 @@
+{
+    "objectClass": [
+        "top",
+        "person",
+        "organizationalPerson",
+        "inetOrgPerson",
+        "trilogiePerson"
+    ],
+    "sn": "Cregg",
+    "cn": "cj.cregg",
+    "trilogieAccountID": "TST0003",
+    "trilogieMobile": "757-555-1003",
+    "trilogieWorkTel": "757-444-1313",
+    "givenName": "CJ",
+    "trilogieWorkEmail": "cj@petesplumbing.com"
+}

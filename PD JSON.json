@@ -1,0 +1,115 @@
+
+
+raw: {
+    "responseControls": [],
+    "messageID": 0,
+    "resultCode": {
+        "intValue": 0,
+        "name": "success"
+    },
+    "numEntries": 2,
+    "numReferences": 0,
+    "searchEntries": [
+        {
+            "controls": [],
+            "messageID": -1,
+            "dn": "cn=charlie.young,ou=trilogie,dc=matt,dc=lab",
+            "attributes": [
+                {
+                    "base64Values": [
+                        "MjAyNTEyMjYxOTMwMjUuOTk3Wg=="
+                    ],
+                    "name": "createTimestamp"
+                },
+                {
+                    "base64Values": [
+                        "Y249RGlyZWN0b3J5IE1hbmFnZXIsY249Um9vdCBETnMsY249Y29uZmln"
+                    ],
+                    "name": "creatorsName"
+                },
+                {
+                    "base64Values": [
+                        "MDcxY2VhM2UtYjM3Zi00ZGQzLTk4YWQtMGEyNGM1MzNmNTEw"
+                    ],
+                    "name": "entryUUID"
+                },
+                {
+                    "base64Values": [
+                        "Y249RGlyZWN0b3J5IE1hbmFnZXIsY249Um9vdCBETnMsY249Y29uZmln"
+                    ],
+                    "name": "modifiersName"
+                },
+                {
+                    "base64Values": [
+                        "MjAyNTEyMzAxNzE2NTguNDMyWg=="
+                    ],
+                    "name": "modifyTimestamp"
+                },
+                {
+                    "base64Values": [
+                        "MTIxMDEyNDA4ODc="
+                    ],
+                    "name": "ds-entry-checksum"
+                },
+                {
+                    "base64Values": [
+                        "Y249c2NoZW1h"
+                    ],
+                    "name": "subschemaSubentry"
+                }
+            ]
+        },
+        {
+            "controls": [],
+            "messageID": -1,
+            "dn": "cn=charles.young,ou=trilogie,dc=matt,dc=lab",
+            "attributes": [
+                {
+                    "base64Values": [
+                        "MjAyNTEyMjkxOTA0NDcuMTQ2Wg=="
+                    ],
+                    "name": "createTimestamp"
+                },
+                {
+                    "base64Values": [
+                        "Y249RGlyZWN0b3J5IE1hbmFnZXIsY249Um9vdCBETnMsY249Y29uZmln"
+                    ],
+                    "name": "creatorsName"
+                },
+                {
+                    "base64Values": [
+                        "Yzk0NzZmMDAtYzY1ZC00Y2FlLWFlMDYtOThjM2Y0YWU2ZDlk"
+                    ],
+                    "name": "entryUUID"
+                },
+                {
+                    "base64Values": [
+                        "Y249RGlyZWN0b3J5IE1hbmFnZXIsY249Um9vdCBETnMsY249Y29uZmln"
+                    ],
+                    "name": "modifiersName"
+                },
+                {
+                    "base64Values": [
+                        "MjAyNTEyMzAxNzE2NTguNDM2Wg=="
+                    ],
+                    "name": "modifyTimestamp"
+                },
+                {
+                    "base64Values": [
+                        "MTE0MzM0MjUyNzc="
+                    ],
+                    "name": "ds-entry-checksum"
+                },
+                {
+                    "base64Values": [
+                        "Y249c2NoZW1h"
+                    ],
+                    "name": "subschemaSubentry"
+                }
+            ]
+        }
+    ]
+}
+
+
+

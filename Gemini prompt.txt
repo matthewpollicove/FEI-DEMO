@@ -1,0 +1,16 @@
+demo application spec: 
+write a documented UI based application that will search an instance of PingDirectory looking for duplicates of the trilogieMobile/ trilogieWorkTel or  trilogieWorkEmail/trilogieOtherEmail attributes when entering phone number or email values. If a match is found display a message with the identities found on the screen and after confirmation, populate an attribute called trilogieLinkID using a UUID in the affected  directory entries. Create an entry in the specified pingone instance. after this is done display the updated directory and pingone entries as an information messages highlighting the trilogieLinkID attribute. the pingone entry should use the trilogieWorkEmail as the username, if this is not avialable use trilogieOtherMail, and if this is not populated use trilogieWorkTel, or TrilogieMobile. The PingOne entry should be populated with any Pingdirectory attributes that map directly. Brand any HTML with the Ferguson and Ping Identity logos. The html ui should be labeled Trilogie Lookup demonstration
+
+debug information: direct a coupy of search input and returned distinguished names from PingDirectory and posted usernames to standard output
+
+the web application and pingdirectory will be hosted on a server called win11. The directory uses port 389. users will be found in ou=trilogie,dc=matt,dc=lab. the bind account is cn=dmanager with a password of Ping-2025!
+
+The PingOne instance is in the north american/.com region
+environment id: a7f3b70d-7674-444a-86a0-17fadfbeb83
+clientid:d7749e7a-e378-4230-873a-09a79eb16f22
+client Secret: njTk5w5IPF.aVvZ5BwH_wkjpOz~EI3wmM~RBpn.nXMPYk0HmbbFD7jruQummvvWq
+users should be created in the population id:  212c3db5-724d-47a6-8740-f167576ae920
+
+Note and address any omissions in this spec. As this is a demonstration it is ok to use clear text include documentation on linking python code to any required html
+
+create and display a separate document in google docs containing architecture and design information and this prompt. Specificially note all LDAP Queries and PingOne API calls used
