@@ -50,6 +50,8 @@ def index():
 def process():
     selected_dn = request.form.get('sot_dn')
     all_dns = request.form.getlist('all_dns')
+    api_calls = []  # Track all API calls made
+    
     # 1. Fetch the "Source of Truth" attributes first
     server = Server(PD_CONFIG['host'], port=PD_CONFIG['port'])
     with Connection(server, PD_CONFIG['user'], PD_CONFIG['pass'], auto_bind=True) as conn:
@@ -79,6 +81,15 @@ def process():
     p1_res = requests.post(f"https://api.pingone.com/v1/environments/{P1_CONFIG['env_id']}/users",
                            headers=headers, json=payload)
     p1_json = p1_res.json()
+    
+    # Track the create user API call
+    api_calls.append({
+        'method': 'POST',
+        'endpoint': f"https://api.pingone.com/v1/environments/{P1_CONFIG['env_id']}/users",
+        'status_code': p1_res.status_code,
+        'request_body': payload,
+        'response': p1_json
+    })
 
     # 4. Extract PingOne UUID to use as the canonical link_id
     p1_id = p1_json.get('id') or p1_json.get('userId') or p1_json.get('uuid')
@@ -88,22 +99,77 @@ def process():
 
     print(f"[DEBUG] Using PingOne ID as trilogieLinkID: {p1_id}", file=sys.stdout)
 
-    # 5. Update all duplicates in PingDirectory to set trilogieLinkID to the PingOne ID
+    # 5. Update all duplicates in PingDirectory to set trilogieLinkID to the PingOne ID (immediately after PingOne user created)
+    # Clear any existing trilogieLinkID values first, then set the new one
     server = Server(PD_CONFIG['host'], port=PD_CONFIG['port'])
     with Connection(server, PD_CONFIG['user'], PD_CONFIG['pass'], auto_bind=True) as conn:
         for dn in all_dns:
-            conn.modify(dn, {'trilogieLinkID': [(MODIFY_REPLACE, [p1_id])]})
+            try:
+                # First, clear any existing values
+                try:
+                    conn.modify(dn, {'trilogieLinkID': [(MODIFY_DELETE, [])]})
+                    print(f"[DEBUG] Cleared existing trilogieLinkID for {dn}", file=sys.stdout)
+                except Exception:
+                    # Attribute might not exist, continue
+                    pass
+                
+                # Now set the new value
+                conn.modify(dn, {'trilogieLinkID': [(MODIFY_REPLACE, [p1_id])]})
+                print(f"[DEBUG] Updated {dn} with trilogieLinkID: {p1_id}", file=sys.stdout)
+            except Exception as e:
+                print(f"[ERROR] Failed to update {dn}: {str(e)}", file=sys.stdout)
 
-    # 6. Patch the PingOne user to include trilogieLinkID as well
+    # 6. Update the PingOne user to include trilogieLinkID attribute
     try:
         update_payload = {"trilogieLinkID": p1_id}
-        requests.patch(f"https://api.pingone.com/v1/environments/{P1_CONFIG['env_id']}/users/{p1_id}",
-                       headers=headers, json=update_payload)
-    except Exception:
-        # Best-effort update; ignore failures for the demo
-        pass
+        p1_patch_res = requests.patch(f"https://api.pingone.com/v1/environments/{P1_CONFIG['env_id']}/users/{p1_id}",
+                                      headers=headers, json=update_payload)
+        
+        # Track the patch user API call
+        api_calls.append({
+            'method': 'PATCH',
+            'endpoint': f"https://api.pingone.com/v1/environments/{P1_CONFIG['env_id']}/users/{p1_id}",
+            'status_code': p1_patch_res.status_code,
+            'request_body': update_payload,
+            'response': p1_patch_res.json() if p1_patch_res.status_code in [200, 204] else p1_patch_res.text
+        })
+        
+        if p1_patch_res.status_code in [200, 204]:
+            print(f"[DEBUG] Successfully patched PingOne user {p1_id} with trilogieLinkID: {p1_id}", file=sys.stdout)
+        else:
+            print(f"[ERROR] Failed to patch PingOne user: {p1_patch_res.status_code} - {p1_patch_res.text}", file=sys.stdout)
+    except Exception as e:
+        print(f"[ERROR] Failed to patch PingOne user: {str(e)}", file=sys.stdout)
 
-    return render_template('index.html', success=True, pd_entry=sot_entry, p1_entry=p1_json, link_id=p1_id)
+    # 6a. Re-fetch the PingOne user to get all populated trilogie attributes
+    try:
+        p1_get_res = requests.get(f"https://api.pingone.com/v1/environments/{P1_CONFIG['env_id']}/users/{p1_id}",
+                                  headers=headers)
+        if p1_get_res.status_code == 200:
+            p1_json = p1_get_res.json()  # Update with complete user data including all trilogie attributes
+            print(f"[DEBUG] Re-fetched PingOne user {p1_id} with all attributes", file=sys.stdout)
+        else:
+            print(f"[WARNING] Failed to re-fetch PingOne user: {p1_get_res.status_code}", file=sys.stdout)
+        
+        # Track the get user API call
+        api_calls.append({
+            'method': 'GET',
+            'endpoint': f"https://api.pingone.com/v1/environments/{P1_CONFIG['env_id']}/users/{p1_id}",
+            'status_code': p1_get_res.status_code,
+            'request_body': None,
+            'response': p1_json if p1_get_res.status_code == 200 else p1_get_res.text
+        })
+    except Exception as e:
+        print(f"[ERROR] Failed to re-fetch PingOne user: {str(e)}", file=sys.stdout)
+
+    # 7. Re-fetch the updated Trilogie entry to reflect changes in the template
+    server = Server(PD_CONFIG['host'], port=PD_CONFIG['port'])
+    with Connection(server, PD_CONFIG['user'], PD_CONFIG['pass'], auto_bind=True) as conn:
+        conn.search(selected_dn, '(objectClass=*)', attributes=['*'])
+        updated_entry = conn.entries[0].entry_attributes_as_dict
+        print(f"[DEBUG] Re-fetched updated entry for {selected_dn}", file=sys.stdout)
+
+    return render_template('index.html', success=True, pd_entry=updated_entry, p1_entry=p1_json, link_id=p1_id, api_calls=api_calls)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
