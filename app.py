@@ -50,27 +50,21 @@ def index():
 def process():
     selected_dn = request.form.get('sot_dn')
     all_dns = request.form.getlist('all_dns')
-    link_id = str(uuid.uuid4())
-    
+    # 1. Fetch the "Source of Truth" attributes first
     server = Server(PD_CONFIG['host'], port=PD_CONFIG['port'])
     with Connection(server, PD_CONFIG['user'], PD_CONFIG['pass'], auto_bind=True) as conn:
-        # 1. Update all duplicates in PingDirectory
-        for dn in all_dns:
-            conn.modify(dn, {'trilogieLinkID': [(MODIFY_REPLACE, [link_id])]})
-        
-        # 2. Fetch the "Source of Truth" attributes
         conn.search(selected_dn, '(objectClass=*)', attributes=['*'])
         sot_entry = conn.entries[0].entry_attributes_as_dict
 
-    # 3. Determine Username Priority
+    # 2. Determine Username Priority
     p1_username = (sot_entry.get('trilogieWorkEmail', [None])[0] or 
                    sot_entry.get('trilogieOtherEmail', [None])[0] or 
                    sot_entry.get('trilogieWorkTel', [None])[0] or 
                    sot_entry.get('trilogieMobile', [''])[0])
-    
-    print(f"[DEBUG] Posting Username to PingOne: {p1_username}", file=sys.stdout)
 
-    # 4. Create in PingOne
+    print(f"[DEBUG] Creating PingOne user for username: {p1_username}", file=sys.stdout)
+
+    # 3. Create user in PingOne (initial creation without trilogieLinkID)
     token = get_p1_token()
     headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
     payload = {
@@ -80,13 +74,36 @@ def process():
             "given": sot_entry.get('givenName', [''])[0],
             "family": sot_entry.get('sn', [''])[0]
         },
-        "population": {"id": P1_CONFIG['pop_id']},
-        "trilogieLinkID": link_id
+        "population": {"id": P1_CONFIG['pop_id']}
     }
-    p1_res = requests.post(f"https://api.pingone.com/v1/environments/{P1_CONFIG['env_id']}/users", 
+    p1_res = requests.post(f"https://api.pingone.com/v1/environments/{P1_CONFIG['env_id']}/users",
                            headers=headers, json=payload)
-    
-    return render_template('index.html', success=True, pd_entry=sot_entry, p1_entry=p1_res.json(), link_id=link_id)
+    p1_json = p1_res.json()
+
+    # 4. Extract PingOne UUID to use as the canonical link_id
+    p1_id = p1_json.get('id') or p1_json.get('userId') or p1_json.get('uuid')
+    if not p1_id:
+        # Fallback: generate a UUID locally (shouldn't be necessary if PingOne returns an id)
+        p1_id = str(uuid.uuid4())
+
+    print(f"[DEBUG] Using PingOne ID as trilogieLinkID: {p1_id}", file=sys.stdout)
+
+    # 5. Update all duplicates in PingDirectory to set trilogieLinkID to the PingOne ID
+    server = Server(PD_CONFIG['host'], port=PD_CONFIG['port'])
+    with Connection(server, PD_CONFIG['user'], PD_CONFIG['pass'], auto_bind=True) as conn:
+        for dn in all_dns:
+            conn.modify(dn, {'trilogieLinkID': [(MODIFY_REPLACE, [p1_id])]})
+
+    # 6. Patch the PingOne user to include trilogieLinkID as well
+    try:
+        update_payload = {"trilogieLinkID": p1_id}
+        requests.patch(f"https://api.pingone.com/v1/environments/{P1_CONFIG['env_id']}/users/{p1_id}",
+                       headers=headers, json=update_payload)
+    except Exception:
+        # Best-effort update; ignore failures for the demo
+        pass
+
+    return render_template('index.html', success=True, pd_entry=sot_entry, p1_entry=p1_json, link_id=p1_id)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
